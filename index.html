@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Top 10</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Top 10">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="Top10.jpeg">
+    <link rel="icon" href="Top10.jpeg">
+
+    <style>
+        :root {
+            --bg-color: #000000;
+            --gradient: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 50%, #8e2de2 100%);
+            --text-color: #ffffff;
+            --border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            flex: 1;
+            background: var(--gradient);
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3);
+            cursor: pointer;
+        }
+
+        button:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        button.editing {
+            background: linear-gradient(135deg, #f12711, #f5af19);
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            flex: 1;
+            align-items: start;
+        }
+
+        .column {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+            min-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .column-title {
+            text-align: center;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .pool-footer {
+            margin-top: auto;
+            padding-top: 10px;
+        }
+
+        .btn-add {
+            width: 100%;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px dashed var(--border-color);
+            box-shadow: none;
+        }
+
+        .slot {
+            height: 50px;
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slot::before {
+            content: attr(data-rank);
+            position: absolute;
+            left: 10px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 1.2rem;
+        }
+
+        .item {
+            width: 100%;
+            height: 50px;
+            background: var(--gradient);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 15px;
+            cursor: grab;
+            touch-action: none;
+            position: relative;
+            z-index: 2;
+            font-weight: 500;
+            text-align: center;
+            word-break: break-word;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .item.dragging {
+            opacity: 0.7;
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+
+        .item-edit-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 5px;
+        }
+
+        .item input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid white;
+            color: white;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            outline: none;
+            padding: 2px 0;
+        }
+
+        .btn-delete {
+            background: #ff3b30;
+            border: none;
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Top 10</h1>
+    </header>
+
+    <div class="controls">
+        <button id="btn-edit" onclick="toggleEdit()">Namen anpassen</button>
+        <button id="btn-reset" onclick="resetApp()">Zurücksetzen</button>
+    </div>
+
+    <div class="game-container">
+        <div class="column" id="pool-column">
+            <div class="column-title">Pool</div>
+            <div id="pool-items" style="display: flex; flex-direction: column; gap: 8px; min-height: 50px;"></div>
+            <div class="pool-footer">
+                <button class="btn-add" id="btn-add-item" onclick="addItem()">+</button>
+            </div>
+        </div>
+
+        <div class="column" id="slots-column">
+            <div class="column-title">Plätze</div>
+            <div class="slot" data-rank="1" id="slot-1"></div>
+            <div class="slot" data-rank="2" id="slot-2"></div>
+            <div class="slot" data-rank="3" id="slot-3"></div>
+            <div class="slot" data-rank="4" id="slot-4"></div>
+            <div class="slot" data-rank="5" id="slot-5"></div>
+            <div class="slot" data-rank="6" id="slot-6"></div>
+            <div class="slot" data-rank="7" id="slot-7"></div>
+            <div class="slot" data-rank="8" id="slot-8"></div>
+            <div class="slot" data-rank="9" id="slot-9"></div>
+            <div class="slot" data-rank="10" id="slot-10"></div>
+        </div>
+    </div>
+
+    <script>
+        let state = {
+            isEditing: false,
+            items: [{ id: "item-" + Date.now(), text: "Spieler 1" }],
+            assignments: {}
+        };
+
+        const poolItemsContainer = document.getElementById('pool-items');
+        const btnEdit = document.getElementById('btn-edit');
+        const btnAdd = document.getElementById('btn-add-item');
+
+        function loadState() {
+            const saved = localStorage.getItem('top10_state');
+            if (saved) {
+                try {
+                    state = JSON.parse(saved);
+                    state.isEditing = false;
+                } catch (e) {
+                    console.error("Fehler beim Laden des State", e);
+                }
+            }
+            render();
+        }
+
+        function saveState() {
+            localStorage.setItem('top10_state', JSON.stringify(state));
+        }
+
+        function addItem() {
+            const totalItems = state.items.length;
+            if (totalItems >= 10) return;
+
+            const newItem = {
+                id: "item-" + Date.now(),
+                text: "Spieler " + (totalItems + 1)
+            };
+            state.items.push(newItem);
+            
+            saveState();
+            render();
+        }
+
+        function deleteItem(itemId) {
+            // Aus der Liste entfernen
+            state.items = state.items.filter(item => item.id !== itemId);
+            
+            // Eventuelle Zuweisung im Slot löschen
+            for (const [slotId, id] of Object.entries(state.assignments)) {
+                if (id === itemId) {
+                    delete state.assignments[slotId];
+                    break;
+                }
+            }
+            
+            saveState();
+            render();
+        }
+
+        function toggleEdit() {
+            state.isEditing = !state.isEditing;
+            if (state.isEditing) {
+                btnEdit.textContent = "Fertig";
+                btnEdit.classList.add('editing');
+            } else {
+                btnEdit.textContent = "Namen anpassen";
+                btnEdit.classList.remove('editing');
+                state.items.forEach(item => {
+                    const input = document.getElementById('input-' + item.id);
+                    if (input) {
+                        item.text = input.value.trim() || "Spieler";
+                    }
+                });
+            }
+            saveState();
+            render();
+        }
+
+        function resetApp() {
+            state.assignments = {};
+            state.isEditing = false;
+            btnEdit.textContent = "Namen anpassen";
+            btnEdit.classList.remove('editing');
+            saveState();
+            render();
+        }
+
+        function render() {
+            btnAdd.style.display = state.items.length >= 10 ? 'none' : 'block';
+
+            document.querySelectorAll('.slot').forEach(slot => {
+                slot.innerHTML = '';
+            });
+            poolItemsContainer.innerHTML = '';
+
+            state.items.forEach(item => {
+                const itemEl = createItemElement(item);
+                
+                let assignedSlotId = null;
+                for (const [slotId, itemId] of Object.entries(state.assignments)) {
+                    if (itemId === item.id) {
+                        assignedSlotId = slotId;
+                        break;
+                    }
+                }
+
+                if (assignedSlotId) {
+                    const slot = document.getElementById(assignedSlotId);
+                    if (slot) slot.appendChild(itemEl);
+                } else {
+                    poolItemsContainer.appendChild(itemEl);
+                }
+            });
+        }
+
+        function createItemElement(item) {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.id = item.id;
+            
+            if (!state.isEditing) {
+                div.textContent = item.text;
+                div.setAttribute('draggable', 'true');
+                setupDragEvents(div);
+            } else {
+                const container = document.createElement('div');
+                container.className = 'item-edit-container';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = 'input-' + item.id;
+                input.value = item.text;
+                input.maxLength = 20;
+                input.addEventListener('touchstart', (e) => e.stopPropagation());
+                
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn-delete';
+                delBtn.textContent = '✕';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteItem(item.id);
+                };
+                delBtn.addEventListener('touchstart', (e) => e.stopPropagation());
+
+                container.appendChild(input);
+                container.appendChild(delBtn);
+                div.appendChild(container);
+            }
+
+            return div;
+        }
+
+        let draggedElement = null;
+        let touchStartZone = null;
+        let initialWidth = 0;
+
+        function setupDragEvents(el) {
+            el.addEventListener('dragstart', (e) => {
+                draggedElement = el;
+                el.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', el.id);
+            });
+
+            el.addEventListener('dragend', () => {
+                el.classList.remove('dragging');
+                draggedElement = null;
+            });
+
+            el.addEventListener('touchstart', handleTouchStart, { passive: false });
+            el.addEventListener('touchmove', handleTouchMove, { passive: false });
+            el.addEventListener('touchend', handleTouchEnd, { passive: false });
+        }
+
+        document.querySelectorAll('.slot, #pool-column').forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (!draggedElement) return;
+                handleDropLogic(draggedElement.id, zone);
+            });
+        });
+
+        function handleTouchStart(e) {
+            if (state.isEditing) return;
+            draggedElement = this;
+            initialWidth = this.offsetWidth;
+            this.classList.add('dragging');
+            touchStartZone = this.parentElement;
+        }
+
+        function handleTouchMove(e) {
+            if (!draggedElement) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            draggedElement.style.position = 'fixed';
+            draggedElement.style.width = initialWidth + 'px';
+            draggedElement.style.left = (touch.clientX - initialWidth / 2) + 'px';
+            draggedElement.style.top = (touch.clientY - 25) + 'px';
+        }
+
+        function handleTouchEnd(e) {
+            if (!draggedElement) return;
+            
+            draggedElement.classList.remove('dragging');
+            draggedElement.style.position = '';
+            draggedElement.style.width = '';
+            draggedElement.style.left = '';
+            draggedElement.style.top = '';
+
+            const touch = e.changedTouches[0];
+            const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (!targetEl) {
+                render();
+                return;
+            }
+
+            let zone = targetEl.closest('.slot') || targetEl.closest('#pool-column');
+            
+            if (!zone && targetEl.closest('.item')) {
+                zone = targetEl.closest('.item').parentElement;
+            }
+
+            if (zone) {
+                handleDropLogic(draggedElement.id, zone);
+            } else {
+                render();
+            }
+
+            draggedElement = null;
+        }
+
+        function handleDropLogic(itemId, targetZone) {
+            const sourceZone = document.getElementById(itemId).parentElement;
+            
+            if (targetZone.id === 'pool-column' || targetZone.id === 'pool-items') {
+                for (const [slotId, id] of Object.entries(state.assignments)) {
+                    if (id === itemId) {
+                        delete state.assignments[slotId];
+                        break;
+                    }
+                }
+            } 
+            else if (targetZone.classList.contains('slot')) {
+                const targetSlotId = targetZone.id;
+                const occupiedItemId = state.assignments[targetSlotId];
+
+                if (occupiedItemId && occupiedItemId !== itemId) {
+                    if (sourceZone.classList.contains('slot')) {
+                        state.assignments[sourceZone.id] = occupiedItemId;
+                    } else {
+                        for (const [slotId, id] of Object.entries(state.assignments)) {
+                            if (id === itemId) delete state.assignments[slotId];
+                        }
+                    }
+                    state.assignments[targetSlotId] = itemId;
+                } else {
+                    for (const [slotId, id] of Object.entries(state.assignments)) {
+                        if (id === itemId) delete state.assignments[slotId];
+                    }
+                    state.assignments[targetSlotId] = itemId;
+                }
+            }
+
+            saveState();
+            render();
+        }
+
+        window.addEventListener('DOMContentLoaded', loadState);
+    </script>
+</body>
+</html>
