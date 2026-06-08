@@ -239,8 +239,8 @@
         }
 
         .item.dragging {
-            opacity: 0.5;
-            transform: scale(1.02);
+            opacity: 0.7;
+            transform: scale(1.05);
             border-color: rgba(182, 102, 255, 0.6);
             box-shadow: var(--glow-purple);
         }
@@ -486,8 +486,8 @@
         }
 
         let draggedElement = null;
-        let touchStartZone = null;
         let initialWidth = 0;
+        let initialHeight = 0;
 
         function setupDragEvents(el) {
             el.addEventListener('dragstart', (e) => {
@@ -522,8 +522,8 @@
             if (state.isEditing) return;
             draggedElement = this;
             initialWidth = this.offsetWidth;
+            initialHeight = this.offsetHeight;
             this.classList.add('dragging');
-            touchStartZone = this.parentElement;
         }
 
         function handleTouchMove(e) {
@@ -531,10 +531,13 @@
             e.preventDefault();
             
             const touch = e.touches[0];
+            
+            // Nutzt clientX/Y bezogen auf den aktuellen Viewport (behebt Scroll-Verschiebungen)
             draggedElement.style.position = 'fixed';
             draggedElement.style.width = initialWidth + 'px';
+            draggedElement.style.height = initialHeight + 'px';
             draggedElement.style.left = (touch.clientX - initialWidth / 2) + 'px';
-            draggedElement.style.top = (touch.clientY - 23) + 'px';
+            draggedElement.style.top = (touch.clientY - initialHeight / 2) + 'px';
         }
 
         function handleTouchEnd(e) {
@@ -543,6 +546,7 @@
             draggedElement.classList.remove('dragging');
             draggedElement.style.position = '';
             draggedElement.style.width = '';
+            draggedElement.style.height = '';
             draggedElement.style.left = '';
             draggedElement.style.top = '';
 
