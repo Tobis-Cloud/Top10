@@ -293,7 +293,18 @@
             localStorage.setItem('top10_state', JSON.stringify(state));
         }
 
+        function saveCurrentInputs() {
+            if (!state.isEditing) return;
+            state.items.forEach(item => {
+                const input = document.getElementById('input-' + item.id);
+                if (input) {
+                    item.text = input.value.trim() || "Spieler";
+                }
+            });
+        }
+
         function addItem() {
+            saveCurrentInputs();
             const totalItems = state.items.length;
             if (totalItems >= 10) return;
 
@@ -308,6 +319,7 @@
         }
 
         function deleteItem(itemId) {
+            saveCurrentInputs();
             // Aus der Liste entfernen
             state.items = state.items.filter(item => item.id !== itemId);
             
@@ -331,18 +343,14 @@
             } else {
                 btnEdit.textContent = "Namen anpassen";
                 btnEdit.classList.remove('editing');
-                state.items.forEach(item => {
-                    const input = document.getElementById('input-' + item.id);
-                    if (input) {
-                        item.text = input.value.trim() || "Spieler";
-                    }
-                });
+                saveCurrentInputs();
             }
             saveState();
             render();
         }
 
         function resetApp() {
+            saveCurrentInputs();
             state.assignments = {};
             state.isEditing = false;
             btnEdit.textContent = "Namen anpassen";
