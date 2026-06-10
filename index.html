@@ -268,9 +268,13 @@
     <div id="drag-proxy"></div>
 
     <script>
+        const defaultNames = ["Luise", "Tobi", "Fabi", "Chrischi", "Anni"];
         let state = {
             isEditing: false,
-            items: [{ id: "item-" + Date.now(), text: "Spieler 1" }],
+            items: defaultNames.map((name, index) => ({
+                id: "item-" + (Date.now() + index),
+                text: name
+            })),
             assignments: {}
         };
 
@@ -284,9 +288,20 @@
                 try {
                     state = JSON.parse(saved);
                     state.isEditing = false;
+                    
+                    // Falls der geladene State leer ist oder nur den alten "Spieler 1" enthält
+                    if (!state.items || state.items.length === 0 || (state.items.length === 1 && state.items[0].text === "Spieler 1")) {
+                        state.items = defaultNames.map((name, index) => ({
+                            id: "item-" + (Date.now() + index),
+                            text: name
+                        }));
+                        saveState();
+                    }
                 } catch (e) {
                     console.error("Fehler beim Laden des State", e);
                 }
+            } else {
+                saveState();
             }
             render();
         }
@@ -342,13 +357,19 @@
             if (state.isEditing) {
                 btnEdit.textContent = "Fertig";
                 btnEdit.classList.add('editing');
+                render();
+                // Erstes Input-Feld automatisch fokussieren und markieren
+                const firstInput = document.querySelector('.item-edit-container input');
+                if (firstInput) {
+                    firstInput.focus();
+                }
             } else {
                 btnEdit.textContent = "Namen anpassen";
                 btnEdit.classList.remove('editing');
                 saveCurrentInputs();
+                render();
             }
             saveState();
-            render();
         }
 
         function resetApp() {
@@ -402,12 +423,19 @@
                 const container = document.createElement('div');
                 container.className = 'item-edit-container';
 
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.id = 'input-' + item.id;
-                input.value = item.text;
-                input.maxLength = 20;
-                input.addEventListener('touchstart', (e) => e.stopPropagation());
+                 const input = document.createElement('input');
+                 input.type = 'text';
+                 input.id = 'input-' + item.id;
+                 input.value = item.text;
+                 input.maxLength = 20;
+                 // Text beim Fokussieren automatisch markieren
+                 input.addEventListener('focus', () => {
+                     setTimeout(() => input.select(), 50);
+                 });
+                 input.addEventListener('click', () => {
+                     input.select();
+                 });
+                 input.addEventListener('touchstart', (e) => e.stopPropagation());
                 
                 const delBtn = document.createElement('button');
                 delBtn.className = 'btn-delete';
