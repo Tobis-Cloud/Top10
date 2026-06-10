@@ -268,7 +268,7 @@
     <div id="drag-proxy"></div>
 
     <script>
-        const defaultNames = ["Luise", "Tobi", "Fabi", "Chrischi", "Anni"];
+        const defaultNames = ["Luise", "Tobi", "Fabi", "Caro", "Chrischi", "Anni"];
         let state = {
             isEditing: false,
             items: defaultNames.map((name, index) => ({
@@ -289,8 +289,17 @@
                     state = JSON.parse(saved);
                     state.isEditing = false;
                     
-                    // Falls der geladene State leer ist oder nur den alten "Spieler 1" enthält
-                    if (!state.items || state.items.length === 0 || (state.items.length === 1 && state.items[0].text === "Spieler 1")) {
+                    // Überprüfen, ob der geladene State genau den alten 5 Default-Spielern entspricht
+                    const oldDefaultNames = ["Luise", "Tobi", "Fabi", "Chrischi", "Anni"];
+                    const isOldDefault = state.items && 
+                                         state.items.length === 5 && 
+                                         state.items.every((item, i) => item.text === oldDefaultNames[i]);
+
+                    // Falls der geladene State leer ist, nur "Spieler 1" enthält oder die alten 5 Defaults enthält
+                    if (!state.items || 
+                        state.items.length === 0 || 
+                        (state.items.length === 1 && state.items[0].text === "Spieler 1") ||
+                        isOldDefault) {
                         state.items = defaultNames.map((name, index) => ({
                             id: "item-" + (Date.now() + index),
                             text: name
